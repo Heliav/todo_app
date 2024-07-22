@@ -22,6 +22,7 @@ router.register(r"notifications", NotificationViewSet, basename="notification")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/", include(router.urls)),
     path("users/", include("django.contrib.auth.urls")),
     path("api/auth/", include("todo_app.users.urls")),
     # path('api/', include('todo_app.users.urls')),
