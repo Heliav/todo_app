@@ -1,7 +1,6 @@
-from rest_framework import viewsets, mixins, status
-from rest_framework.decorators import action
+from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+
 from .permissions import IsOwner
 from .serializers import TodoItemSerializer, ReminderSerializer
 from ..todos.models import Todo, Reminder
