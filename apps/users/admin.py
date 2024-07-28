@@ -1,6 +1,8 @@
 from django.contrib import admin
 import django.contrib.auth.admin
-from apps.users.models import User
+from apps.users.models import User, Notification
+
+admin.site.register(Notification)
 
 
 class CustomUserAdmin(django.contrib.auth.admin.UserAdmin):

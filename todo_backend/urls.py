@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.routers import DefaultRouter
 from django.contrib.auth import views as auth_views
 from drf_yasg.views import get_schema_view
@@ -14,6 +15,9 @@ schema_view = get_schema_view(
         description="API documentation for todo app system",
     ),
     public=True,
+    permission_classes=[
+        AllowAny,
+    ],
 )
 
 router = DefaultRouter()
@@ -22,13 +26,8 @@ router.register(r"notifications", NotificationViewSet, basename="notification")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include(router.urls)),
-    path("users/login/", auth_views.LoginView.as_view(), name="login"),
-    path("users/logout/", auth_views.LogoutView.as_view(), name="logout"),
-    path("users/", include("django.contrib.auth.urls")),
-    path("api/auth/", include("apps.users.urls")),
-    # path('api/', include('todo_backend.urls')),
-    path("api/", include("apps.todos.urls")),
+    path("todos/", include("apps.todos.urls")),
+    path("users/", include("apps.users.urls")),
     path(
         "swagger/",
         schema_view.with_ui("swagger", cache_timeout=0),

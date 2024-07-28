@@ -6,12 +6,4 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "todo_backend.settings")
 
 app = Celery("todo_backend")
 app.config_from_object("django.conf:settings", namespace="CELERY")
-app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
-
-#
-# app.conf.beat_schedule = {
-#     "send-reminders-every-minute": {
-#         "task": "todos.tasks.send_reminders",
-#         "schedule": 60.0,  # Every 60 seconds
-#     },
-# }
+app.autodiscover_tasks()

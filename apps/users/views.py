@@ -1,10 +1,10 @@
-from django.contrib.auth import authenticate, logout
-from rest_framework import status, viewsets, mixins, generics
+from django.contrib.auth import login
+from rest_framework import status, viewsets, mixins
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.users.models import User, Notification
 from .serializers import (
@@ -23,61 +23,50 @@ class UserViewSet(
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    def get_serializer_class(self):
+        if self.action == "login":
+            return LoginSerializer
+        return super().get_serializer_class()
 
-#    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
-#
-#
-# def register(request):
-#         serializer = RegisterSerializer(data=request.data)
-#         if serializer.is_valid():
-#             user = serializer.save()
-#             token, created = Token.objects.get_or_create(user=user)
-#             return Response({'token': token.key}, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#
-#     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
-# def login(self, request):
-#         serializer = LoginSerializer(data=request.data)
-#         if serializer.is_valid():
-#             user = authenticate(request, username=serializer.data['username'], password=serializer.data['password'])
-#             if user is not None:
-#                 token, created = Token.objects.get_or_create(user=user)
-#                 return Response({'token': token.key}, status=status.HTTP_200_OK)
-#             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#
-#     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
-# def logout(self, request):
-#         request.user.auth_token.delete()
-#         return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
-
-
-class LoginAPIView(generics.GenericAPIView):
-    serializer_class = LoginSerializer
-
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @api_view(["POST"])
-    @permission_classes([IsAuthenticated])
-    def logout_view(request):
-        request.User.auth_token.delete()
-        logout(request)
-        return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
+    @action(
+        detail=False,
+        methods=["POST"],
+        permission_classes=[AllowAny],
+    )
+    def login(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data["user"]
+            serializer.is_valid(raise_exception=True)
+            refresh = RefreshToken.for_user(user)
+            access_token = refresh.access_token
+            login(request, user)
+            token, created = Token.objects.get_or_create(user=user)
+            return Response(
+                {
+                    "refresh": str(refresh),
+                    "access": str(access_token),
+                },
+                status=status.HTTP_200_OK,
+            )
 
 
-class NotificationViewSet(viewsets.GenericViewSet, mixins.ListModelMixin):
+class NotificationViewSet(
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+):
+    queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
+    def get(self):
         return Notification.objects.filter(user=self.request.user).order_by(
             "-created_at"
         )
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["GET"])
     def not_viewed_count(self, request):
         return Response(
             {

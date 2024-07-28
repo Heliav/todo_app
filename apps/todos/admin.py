@@ -3,6 +3,7 @@ from apps.todos.models import Todo
 
 admin.site.register(Todo)
 
+
 # from celery.schedules import schedule
 # from django.contrib import admin
 # from django.contrib.auth.admin import UserAdmin

@@ -5,5 +5,13 @@ from apps.todos.models import Todo
 class TodoItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Todo
-        fields = "__all__"
+        fields = [
+            "title",
+            "description",
+            "due_date",
+            "reminder_date",
+            "created_at",
+            "updated_at",
+            "user",
+        ]
         read_only_fields = ["created_at", "updated_at"]
